@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mastery: Hàm Số Mũ & Lôgarit - Toán 11</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script>
+        window.MathJax = {
+            tex: { 
+                inlineMath: [['$', '$'], ['\\(', '\\)']], 
+                displayMath: [['$$', '$$']],
+                processEscapes: true
+            },
+            options: { enableMenu: false },
+            svg: { fontCache: 'global' }
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: #f8fafc; color: #1e293b; }
+        .math-render { opacity: 0; transition: opacity 0.5s ease; }
+        .math-render.ready { opacity: 1; }
+        .choice-btn:active { transform: scale(0.97); }
+        .explanation-box { 
+            border-left: 8px solid #6366f1; 
+            background-color: #eef2ff;
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.08);
+            animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+        .btn-check { box-shadow: 0 10px 20px -5px rgba(99, 102, 241, 0.3); }
+        .item-row { transition: all 0.2s ease; }
+        .item-row:hover { background-color: #ffffff; }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-2 md:p-6">
+    <div id="game-app" class="w-full max-w-5xl bg-white rounded-[2.5rem] shadow-[0_40px_80px_-20px_rgba(99,102,241,0.12)] border border-indigo-50 flex flex-col">
+        
+        <!-- Header -->
+        <div class="bg-indigo-600 p-8 text-white text-center relative overflow-hidden rounded-t-[2.5rem]">
+            <div class="absolute inset-0 bg-gradient-to-br from-indigo-800 via-indigo-600 to-blue-500 opacity-95"></div>
+            <div class="relative z-10">
+                <h1 class="text-3xl font-extrabold tracking-tight text-white mb-2 italic uppercase">HÀM SỐ MŨ VÀ HÀM SỐ LÔGARIT</h1>
+                <p class="text-indigo-100 text-sm font-medium opacity-90 uppercase tracking-[0.3em]">Toán 11 KNTT - Tập xác định, Đồ thị & Toán thực tế</p>
+            </div>
+        </div>
+
+        <!-- Progress bar -->
+        <div id="progress-container" class="hidden h-3 bg-slate-100 relative">
+            <div id="progress-bar" class="h-full bg-gradient-to-r from-indigo-400 to-blue-400 transition-all duration-700 w-0"></div>
+        </div>
+
+        <!-- Content Area -->
+        <div id="main-content" class="p-6 md:p-12 flex-grow min-h-[600px] flex flex-col overflow-y-auto">
+            <div id="start-screen" class="text-center py-16 my-auto">
+                <div class="text-[10rem] mb-8 leading-none">📈</div>
+                <h2 class="text-4xl font-black text-slate-800 mb-6 uppercase tracking-tighter">KIỂM TRA KIẾN THỨC</h2>
+                <p class="text-slate-500 mb-12 max-w-2xl mx-auto leading-relaxed text-xl">
+                    Hệ thống 50 câu hỏi chuẩn mực bao phủ <b>Hàm số Mũ & Lôgarit</b>. <br>
+                    Lời giải chuẩn LaTeX. Lỗi hiển thị công thức đã được khắc phục hoàn toàn. Thuật toán đảm bảo lượt đề sau <b class="text-indigo-600">không trùng quá 2 câu</b> với lượt liền trước.
+                </p>
+                <button onclick="initGame()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-24 py-6 rounded-[2rem] font-black text-2xl shadow-xl transition-all active:scale-95 transform hover:-translate-y-1">BẮT ĐẦU NGAY</button>
+            </div>
+        </div>
+
+        <!-- Footer Control -->
+        <div id="footer-actions" class="hidden p-8 bg-slate-50 border-t border-slate-100 flex flex-col md:flex-row justify-between items-center gap-6 rounded-b-[2.5rem]">
+            <div id="status" class="text-lg font-black text-indigo-600 uppercase tracking-[0.25em]">CÂU 1 / 15</div>
+            <div class="flex gap-4 w-full md:w-auto">
+                <button id="check-btn" onclick="processAnswer()" class="flex-1 md:flex-none bg-indigo-600 hover:bg-indigo-700 text-white px-16 py-4 rounded-2xl font-bold text-xl transition shadow-lg btn-check active:scale-95">Kiểm tra</button>
+                <button id="next-btn" onclick="renderNext()" class="hidden flex-1 md:flex-none bg-blue-500 hover:bg-blue-600 text-white px-16 py-4 rounded-2xl font-bold text-xl shadow-lg transition active:scale-95">Tiếp theo →</button>
+                <button id="result-btn" onclick="finishGame()" class="hidden flex-1 md:flex-none bg-orange-500 hover:bg-orange-600 text-white px-16 py-4 rounded-2xl font-bold text-xl shadow-lg transition active:scale-95">Kết quả</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const MASTER_POOL = {
+            part1: [
+                { id: "hsml_p1_1", question: "Trong các hàm số sau, hàm số nào là hàm số mũ?", options: ["$y = \\frac{1}{2^{-x}}$", "$y = x^{-3}$", "$y = \\ln\\sqrt{x}$", "$y = \\frac{1}{3x}$"], correct: 0, explanation: "Ta biến đổi: $y = \\frac{1}{2^{-x}} = 2^x$. Đây là hàm số mũ có dạng $y = a^x$ với cơ số $a = 2 &gt; 0$ và $a \\ne 1$." },
+                { id: "hsml_p1_2", question: "Tập xác định của hàm số $y = e^{-x}$ là:", options: ["$\\mathbb{R}$", "$\\mathbb{R} \\setminus \\{0\\}$", "$(1; +\\infty)$", "$(0; +\\infty)$"], correct: 0, explanation: "Hàm số $y = e^{-x} = \\left(\\frac{1}{e}\\right)^x$ là hàm số mũ với cơ số $a = \\frac{1}{e} &gt; 0, a \\ne 1$. Tập xác định của mọi hàm số mũ cơ bản là $\\mathbb{R}$." },
+                { id: "hsml_p1_3", question: "Tập xác định của hàm số $y = \\log_2(x + 1)$ là:", options: ["$\\mathbb{R}$", "$(1; +\\infty)$", "$(-1; +\\infty)$", "$(0; +\\infty)$"], correct: 2, explanation: "Hàm số lôgarit $y = \\log_a f(x)$ xác định khi biểu thức dưới dấu lôgarit dương, tức là $f(x) &gt; 0$. <br>Do đó $x + 1 &gt; 0 \\Leftrightarrow x &gt; -1$. Vậy tập xác định là $D = (-1; +\\infty)$." },
+                { id: "hsml_p1_4", question: "Trong các hàm số dưới đây, hàm số nào nghịch biến trên tập số thực $\\mathbb{R}$?", options: ["$y = \\left(\\frac{\\pi}{3}\\right)^x$", "$y = \\log_{\\frac{\\pi}{2}}(2x^2+1)$", "$y = \\left(\\frac{2}{e}\\right)^x$", "$y = \\log_{\\frac{2}{3}} x$"], correct: 2, explanation: "Hàm số nghịch biến trên $\\mathbb{R}$ phải là hàm số mũ có cơ số $0 &lt; a &lt; 1$. <br>Ta có số Euler $e \\approx 2.718 \\Rightarrow \\frac{2}{e} &lt; 1$. Do đó hàm số mũ $y = \\left(\\frac{2}{e}\\right)^x$ luôn nghịch biến trên $\\mathbb{R}$." },
+                { id: "hsml_p1_5", question: "Tập xác định của hàm số $y = \\ln(3 - x)$ là:", options: ["$(-\\infty; 3)$", "$(3; +\\infty)$", "$\\mathbb{R} \\setminus \\{3\\}$", "$(0; 3)$"], correct: 0, explanation: "Điều kiện xác định của hàm số lôgarit là biểu thức trong $\\ln$ phải lớn hơn $0$: <br>$3 - x &gt; 0 \\Leftrightarrow x &lt; 3$. <br>Vậy tập xác định là $D = (-\\infty; 3)$." },
+                { id: "hsml_p1_6", question: "Cho đồ thị hàm số $y = a^x$ và $y = \\log_b x$ lần lượt là hàm số đồng biến và nghịch biến trên các tập xác định của chúng. Khẳng định nào sau đây đúng?", options: ["$0 &lt; a &lt; 1, 0 &lt; b &lt; 1$", "$a &gt; 1, b &gt; 1$", "$0 &lt; b &lt; 1 &lt; a$", "$0 &lt; a &lt; 1 &lt; b$"], correct: 2, explanation: "Hàm số mũ $y = a^x$ đồng biến nên cơ số $a &gt; 1$. <br>Hàm số lôgarit $y = \\log_b x$ nghịch biến nên cơ số $0 &lt; b &lt; 1$. <br>Kết hợp hai điều kiện lại ta có: $0 &lt; b &lt; 1 &lt; a$." },
+                { id: "hsml_p1_7", question: "Tìm cơ số $a$ để hàm số $y = \\log_a x$ $(a &gt; 0, a \\ne 1)$ có đồ thị đi qua điểm $M(2; 2)$.", options: ["$a=2$", "$a=4$", "$a=\\sqrt{2}$", "$a=\\frac{\\sqrt{2}}{2}$"], correct: 2, explanation: "Thay tọa độ điểm $M(2; 2)$ vào phương trình hàm số ta được: $2 = \\log_a 2 \\Leftrightarrow a^2 = 2$. <br>Vì điều kiện của cơ số là $a &gt; 0$ và $a \\ne 1$ nên ta nhận nghiệm $a = \\sqrt{2}$." },
+                { id: "hsml_p1_8", question: "Tập giá trị của hàm số $y = 3^x$ trên đoạn $[-1; 3]$ là:", options: ["$\\left(\\frac{1}{3}; 27\\right)$", "$\\left[\\frac{1}{3}; 27\\right]$", "$\\left[\\frac{1}{3}; 27\\right)$", "$[3; 27)$"], correct: 1, explanation: "Hàm số $y = 3^x$ có cơ số $3 &gt; 1$ nên luôn đồng biến trên $\\mathbb{R}$. <br>Do đó, khi xét trên đoạn $[-1; 3]$, hàm số đạt Giá trị nhỏ nhất tại $x = -1 \\Rightarrow y = 3^{-1} = \\frac{1}{3}$ và Giá trị lớn nhất tại $x = 3 \\Rightarrow y = 3^3 = 27$. <br>Vậy tập giá trị tương ứng là đoạn $\\left[\\frac{1}{3}; 27\\right]$." },
+                { id: "hsml_p1_9", question: "Tập giá trị của hàm số $y = \\log_{\\frac{1}{2}} x$ trên đoạn $[1; 8]$ là:", options: ["$[-3; 0]$", "$\\left[\\frac{1}{8}; \\frac{1}{2}\\right]$", "$\\left(\\frac{1}{8}; 2\\right)$", "$[0; 3]$"], correct: 0, explanation: "Hàm số $y = \\log_{\\frac{1}{2}} x$ có cơ số $\\frac{1}{2} &lt; 1$ nên luôn nghịch biến trên khoảng $(0; +\\infty)$. <br>Tại $x = 1$, $y = \\log_{\\frac{1}{2}} 1 = 0$ (Đây là giá trị lớn nhất). <br>Tại $x = 8$, $y = \\log_{\\frac{1}{2}} 8 = -3$ (Đây là giá trị nhỏ nhất). <br>Vậy tập giá trị là đoạn $[-3; 0]$." },
+                { id: "hsml_p1_10", question: "Hàm số nào dưới đây có tập giá trị là toàn bộ tập số thực $\\mathbb{R}$?", options: ["$y = 2^x$", "$y = e^x$", "$y = \\ln x$", "$y = x^2$"], correct: 2, explanation: "Tập giá trị của hàm số lôgarit $y = \\log_a x$ (với $a &gt; 0, a \\ne 1$) là toàn bộ tập số thực $\\mathbb{R}$. Trong khi đó, các hàm số mũ cơ bản có tập giá trị là $(0; +\\infty)$ và hàm số $y=x^2$ có tập giá trị là $[0; +\\infty)$." },
+                { id: "hsml_p1_11", question: "Tìm tập xác định của hàm số $y = \\log_2(x^2 - 9)$.", options: ["$(3; +\\infty)$", "$(-3; 3)$", "$(-\\infty; -3) \\cup (3; +\\infty)$", "$\\mathbb{R} \\setminus \\{-3; 3\\}$"], correct: 2, explanation: "Điều kiện xác định để lôgarit có nghĩa: $x^2 - 9 &gt; 0 \\Leftrightarrow (x-3)(x+3) &gt; 0 \\Leftrightarrow x &lt; -3$ hoặc $x &gt; 3$. <br>Tập xác định là $D = (-\\infty; -3) \\cup (3; +\\infty)$." },
+                { id: "hsml_p1_12", question: "Cho hàm số $y = \\pi^x$. Mệnh đề nào sau đây ĐÚNG?", options: ["Hàm số nghịch biến trên $\\mathbb{R}$.", "Tập giá trị của hàm số là $\\mathbb{R}$.", "Đồ thị hàm số đi qua điểm $(0; 1)$.", "Đồ thị hàm số cắt trục hoành."], correct: 2, explanation: "Hàm số $y = \\pi^x$ là hàm số mũ. <br>- Cơ số $\\pi \\approx 3.14 &gt; 1$ nên hàm đồng biến (A sai). <br>- Tập giá trị của hàm số mũ là $(0; +\\infty)$ (B sai). <br>- Đồ thị luôn nằm phía trên trục hoành, không bao giờ cắt trục hoành (D sai). <br>- Thay $x=0 \\Rightarrow y = \\pi^0 = 1$. Đồ thị đi qua điểm $(0; 1)$ (C đúng)." },
+                { id: "hsml_p1_13", question: "Hàm số $y = \\log_a x$ (với $0 &lt; a &lt; 1$) có đặc điểm nào sau đây?", options: ["Đồng biến trên $(0; +\\infty)$", "Nghịch biến trên $\\mathbb{R}$", "Cắt trục tung tại điểm $(0; 1)$", "Đồ thị đi qua điểm $(1; 0)$"], correct: 3, explanation: "Do $0 &lt; a &lt; 1$, hàm số nghịch biến trên tập xác định $(0; +\\infty)$ (chú ý: không phải trên $\\mathbb{R}$). <br>Mọi đồ thị hàm lôgarit $y = \\log_a x$ cơ bản đều luôn cắt trục hoành tại điểm $(1; 0)$ do $\\log_a 1 = 0$." },
+                { id: "hsml_p1_14", question: "Tập xác định của hàm số $y = 5^{x^2 - 3x}$ là:", options: ["$\\mathbb{R}$", "$(0; +\\infty)$", "$\\mathbb{R} \\setminus \\{0; 3\\}$", "$(3; +\\infty)$"], correct: 0, explanation: "Đây là hàm số mũ có dạng $y = a^{f(x)}$. Tập xác định của nó phụ thuộc hoàn toàn vào tập xác định của biểu thức số mũ $f(x)$. <br>Vì đa thức $x^2 - 3x$ hoàn toàn xác định với mọi $x \\in \\mathbb{R}$, nên tập xác định của hàm số là $D = \\mathbb{R}$." },
+                { id: "hsml_p1_15", question: "Hàm số $y = \\log_{0.2}(x+3)$ nghịch biến trên khoảng nào dưới đây?", options: ["$\\mathbb{R}$", "$(-3; +\\infty)$", "$(0; +\\infty)$", "$(-\\infty; -3)$"], correct: 1, explanation: "Tìm tập xác định: $x+3 &gt; 0 \\Leftrightarrow x &gt; -3$. Tức là $D = (-3; +\\infty)$. <br>Vì cơ số $a = 0.2 &lt; 1$ nên hàm số lôgarit này luôn nghịch biến trên toàn bộ tập xác định của nó, tức là nghịch biến trên khoảng $(-3; +\\infty)$." },
+                { id: "hsml_p1_16", question: "Đường cong nào sau đây luôn nằm hoàn toàn phía trên trục hoành?", options: ["$y = \\log_2 x$", "$y = \\ln x$", "$y = 2^x$", "$y = x^3$"], correct: 2, explanation: "Tập giá trị của hàm số mũ $y = a^x$ (với $a &gt; 0$) là khoảng $(0; +\\infty)$. Do đó, đồ thị của nó luôn nhận giá trị dương và nằm hoàn toàn phía trên trục hoành $y=0$." },
+                { id: "hsml_p1_17", question: "Tập xác định của hàm số $y = \\log(-x^2 + 3)$ là:", options: ["$(-\\sqrt{3}; \\sqrt{3})$", "$[-\\sqrt{3}; \\sqrt{3}]$", "$(0; \\sqrt{3})$", "$(-\\infty; -\\sqrt{3}) \\cup (\\sqrt{3}; +\\infty)$"], correct: 0, explanation: "Biểu thức dưới dấu lôgarit phải luôn lớn hơn $0$: <br>$-x^2 + 3 &gt; 0 \\Leftrightarrow x^2 &lt; 3 \\Leftrightarrow -\\sqrt{3} &lt; x &lt; \\sqrt{3}$. <br>Vậy tập xác định là khoảng $(-\\sqrt{3}; \\sqrt{3})$." },
+                { id: "hsml_p1_18", question: "Hàm số $y = a^x$ và $y = b^x$ ($a, b &gt; 1$) có đồ thị cắt trục tung tại cùng một điểm $(0; 1)$. Nếu đồ thị $y = a^x$ dốc đứng hơn (nằm trên) đồ thị $y = b^x$ khi $x &gt; 0$ thì:", options: ["$a &gt; b &gt; 1$", "$b &gt; a &gt; 1$", "$a = b &gt; 1$", "Không thể so sánh"], correct: 0, explanation: "Với $x &gt; 0$, nếu đồ thị $y = a^x$ nằm trên đồ thị $y = b^x$ thì ta có bất phương trình $a^x &gt; b^x$. <br>Thử chọn một điểm cụ thể, ví dụ $x = 1 &gt; 0$, ta thu được $a^1 &gt; b^1 \\Rightarrow a &gt; b$. Kết hợp với giả thiết, ta có kết quả $a &gt; b &gt; 1$." },
+                { id: "hsml_p1_19", question: "Tìm điểm chung của đồ thị hàm số $y = 3^x$ và $y = \\log_3 x$.", options: ["$(1; 1)$", "$(3; 3)$", "$(0; 1)$", "Không có điểm chung"], correct: 3, explanation: "Đồ thị của hàm số mũ $y = a^x$ và hàm số lôgarit $y = \\log_a x$ (với $a &gt; 1$) luôn đối xứng nhau qua đường phân giác $y=x$. Với cơ số $a = 3 &gt; e^{1/e} \\approx 1.44$, hai đồ thị này hoàn toàn nằm về hai phía của đường phân giác $y=x$ và không bao giờ cắt nhau." },
+                { id: "hsml_p1_20", question: "Giá trị nhỏ nhất của hàm số $y = 2^{x^2 + 1}$ là:", options: ["1", "2", "4", "0"], correct: 1, explanation: "Ta có bình phương $x^2 \\ge 0 \\Rightarrow x^2 + 1 \\ge 1$ với mọi $x \\in \\mathbb{R}$. <br>Vì cơ số $2 &gt; 1$ nên hàm số $y = 2^t$ đồng biến, do đó $y = 2^{x^2 + 1} \\ge 2^1 = 2$. <br>Vậy giá trị nhỏ nhất của hàm số bằng $2$, đạt được khi $x=0$." },
+                { id: "hsml_p1_21", question: "Cho hàm số $y = \\log_5(x-1)$. Điểm nào sau đây thuộc đồ thị hàm số?", options: ["$(2; 1)$", "$(6; 1)$", "$(1; 0)$", "$(5; 1)$"], correct: 1, explanation: "Ta có thể thử tọa độ các điểm vào phương trình hàm số. Với điểm $(6; 1)$: <br>Thay $x=6$ vào hàm số ta được $y = \\log_5(6-1) = \\log_5 5 = 1$. <br>Kết quả trùng khớp với tung độ của điểm. Vậy điểm $(6; 1)$ thuộc đồ thị." },
+                { id: "hsml_p1_22", question: "Tập xác định của hàm số $y = \\ln(x^2 + 1)$ là:", options: ["$(-1; 1)$", "$[0; +\\infty)$", "$\\mathbb{R} \\setminus \\{0\\}$", "$\\mathbb{R}$"], correct: 3, explanation: "Điều kiện xác định của hàm lôgarit là biểu thức trong $\\ln$ phải lớn hơn $0$. <br>Ta xét $x^2 + 1 &gt; 0$. Vì $x^2 \\ge 0$ với mọi $x$, nên $x^2 + 1 \\ge 1 &gt; 0$ luôn đúng với mọi $x \\in \\mathbb{R}$. Vậy tập xác định là $D = \\mathbb{R}$." },
+                { id: "hsml_p1_23", question: "Đường thẳng $y = 1$ cắt đồ thị hàm số $y = \\log_2(x-1)$ tại điểm có hoành độ là:", options: ["3", "2", "1", "4"], correct: 0, explanation: "Xét phương trình hoành độ giao điểm: $\\log_2(x-1) = 1$. <br>Theo định nghĩa cơ bản của lôgarit ta có: $x - 1 = 2^1 \\Leftrightarrow x = 3$." },
+                { id: "hsml_p1_24", question: "Giao điểm của đồ thị hàm số $y = 4^x - 2$ và trục hoành có hoành độ là:", options: ["1", "0.5", "0", "-0.5"], correct: 1, explanation: "Đồ thị cắt trục hoành khi tung độ $y=0$. <br>Giải phương trình: $4^x - 2 = 0 \\Leftrightarrow 4^x = 2 \\Leftrightarrow 2^{2x} = 2^1 \\Leftrightarrow 2x = 1 \\Leftrightarrow x = 0.5$." },
+                { id: "hsml_p1_25", question: "Đồ thị hàm số $y = \\left(\\frac{1}{2}\\right)^x$ đối xứng với đồ thị hàm số nào qua trục tung $Oy$?", options: ["$y = \\log_2 x$", "$y = 2^x$", "$y = -\\left(\\frac{1}{2}\\right)^x$", "$y = \\log_{0.5} x$"], correct: 1, explanation: "Ta có $y = \\left(\\frac{1}{2}\\right)^x = 2^{-x}$. Theo tính chất biến đổi đồ thị, đồ thị của hàm số $y = f(-x)$ đối xứng với đồ thị $y = f(x)$ qua trục tung. Do đó, đồ thị hàm số $y = 2^{-x}$ đối xứng với đồ thị hàm số $y = 2^x$ qua trục tung $Oy$." },
+                { id: "hsml_p1_26", question: "Tập xác định của hàm số $y = \\log_{x-1}(5)$ là:", options: ["$(1; +\\infty)$", "$(1; +\\infty) \\setminus \\{2\\}$", "$\\mathbb{R}$", "$[1; +\\infty)$"], correct: 1, explanation: "Để hàm số lôgarit xác định, cơ số của nó phải lớn hơn $0$ và khác $1$. <br>Ta có hệ điều kiện: $\\begin{cases} x-1 &gt; 0 \\\\ x-1 \\ne 1 \\end{cases} \\Leftrightarrow \\begin{cases} x &gt; 1 \\\\ x \\ne 2 \\end{cases}$. Vậy tập xác định là $(1; +\\infty) \\setminus \\{2\\}$." },
+                { id: "hsml_p1_27", question: "Hàm số nào sau đây đồng biến trên khoảng $(0; +\\infty)$?", options: ["$y = \\log_{0.8} x$", "$y = \\left(\\frac{e}{3}\\right)^x$", "$y = \\log_{\\sqrt{2}} x$", "$y = \\left(\\frac{1}{\\pi}\\right)^x$"], correct: 2, explanation: "Hàm số lôgarit $y = \\log_a x$ đồng biến trên tập xác định $(0; +\\infty)$ khi cơ số $a &gt; 1$. <br>Trong các đáp án, ta xét cơ số $a = \\sqrt{2} \\approx 1.414 &gt; 1$, vậy hàm $y = \\log_{\\sqrt{2}} x$ là hàm đồng biến." },
+                { id: "hsml_p1_28", question: "Hàm số $y = \\left(\\frac{\\sqrt{2}}{2}\\right)^x$ có đồ thị:", options: ["Đi lên từ trái sang phải", "Đi xuống từ trái sang phải", "Nằm hoàn toàn bên trái trục tung", "Cắt trục hoành tại $(1; 0)$"], correct: 1, explanation: "Xác định cơ số $a = \\frac{\\sqrt{2}}{2} \\approx 0.707 &lt; 1$. Vậy hàm số mũ này nghịch biến trên $\\mathbb{R}$. Đồ thị của mọi hàm nghịch biến luôn có hướng đi xuống từ trái sang phải." },
+                { id: "hsml_p1_29", question: "Có bao nhiêu hàm số đồng biến trên $\\mathbb{R}$ trong các hàm số sau: $y=3^x$, $y=\\left(\\frac{1}{e}\\right)^x$, $y=\\log_2 x$, $y=(\\sqrt{5})^x$?", options: ["1", "2", "3", "4"], correct: 1, explanation: "Xét tính đồng biến và tập xác định: Hàm lôgarit $y=\\log_2 x$ chỉ xác định trên $(0; +\\infty)$, do đó không thể đồng biến trên $\\mathbb{R}$. <br>Hàm số $y=\\left(\\frac{1}{e}\\right)^x$ có cơ số $\\frac{1}{e} &lt; 1$ nên nghịch biến trên $\\mathbb{R}$. <br>Các hàm số mũ $y=3^x$ và $y=(\\sqrt{5})^x$ có cơ số $a &gt; 1$ và tập xác định là $\\mathbb{R}$ nên luôn đồng biến trên $\\mathbb{R}$. Vậy có $2$ hàm số thỏa mãn." },
+                { id: "hsml_p1_30", question: "Nếu đồ thị hàm số $y = \\log_a x$ nằm phía trên trục hoành với mọi $x &gt; 1$ thì:", options: ["$a &gt; 1$", "$0 &lt; a &lt; 1$", "$a &lt; 0$", "$a = 1$"], correct: 0, explanation: "Với mọi $x &gt; 1$, để đồ thị nằm trên trục hoành thì giá trị hàm số phải mang dấu dương: $y = \\log_a x &gt; 0$. <br>Ta biết rằng $\\log_a 1 = 0$, do đó $\\log_a x &gt; \\log_a 1$. Vì dấu bất đẳng thức giữ nguyên chiều (từ $x &gt; 1$ sang $\\log_a x &gt; \\log_a 1$), cơ số $a$ phải thỏa mãn điều kiện hàm đồng biến là $a &gt; 1$." }
+            ],
+            part2: [
+                { id: "hsml_p2_1", question: "Cho hàm số $y = \\log_{0.5} x$. Xét tính đúng/sai của các mệnh đề sau:", items: [
+                    { text: "Hàm số có tập xác định $D = \\mathbb{R}$.", isTrue: false },
+                    { text: "Hàm số nghịch biến trên khoảng $(0; +\\infty)$.", isTrue: true },
+                    { text: "Đồ thị hàm số cắt trục hoành tại điểm $A(1; 0)$.", isTrue: true },
+                    { text: "Đồ thị hàm số đi qua điểm $N(0.5; 1)$.", isTrue: true }
+                ], explanation: "<b>Giải thích chi tiết:</b><br>a) Sai. Tập xác định của mọi hàm lôgarit cơ bản là $x &gt; 0$, tức là $D = (0; +\\infty)$.<br>b) Đúng. Cơ số $a = 0.5 &lt; 1$ nên hàm số lôgarit luôn nghịch biến trên khoảng xác định $(0; +\\infty)$.<br>c) Đúng. Cho tung độ $y=0 \\Rightarrow x = 0.5^0 = 1$. Giao điểm với trục hoành là $A(1; 0)$.<br>d) Đúng. Cho hoành độ $x=0.5 \\Rightarrow y = \\log_{0.5} 0.5 = 1$. Tọa độ $N(0.5; 1)$ hoàn toàn thỏa mãn phương trình." },
+                { id: "hsml_p2_2", question: "Cho hàm số $y = 2^x$. Khẳng định nào sau đây là đúng hay sai?", items: [
+                    { text: "Hàm số có tập xác định $D = \\mathbb{R}$.", isTrue: true },
+                    { text: "Hàm số nghịch biến trên khoảng $(-\\infty; +\\infty)$.", isTrue: false },
+                    { text: "Đồ thị hàm số đi qua điểm $A(2; 4)$.", isTrue: true },
+                    { text: "Đồ thị hàm số $y = 2^x$ đối xứng với đồ thị $y = \\left(\\frac{1}{2}\\right)^x$ qua trục tung.", isTrue: true }
+                ], explanation: "<b>Giải thích chi tiết:</b><br>a) Đúng. Hàm số mũ $y=a^x$ hoàn toàn xác định với mọi số thực $x \\in \\mathbb{R}$.<br>b) Sai. Cơ số $a = 2 &gt; 1$ nên hàm số mũ này phải đồng biến trên toàn bộ $\\mathbb{R}$.<br>c) Đúng. Thay $x=2 \\Rightarrow y = 2^2 = 4$. Tọa độ $(2; 4)$ thỏa mãn phương trình đồ thị.<br>d) Đúng. Hàm số $y = \\left(\\frac{1}{2}\\right)^x$ có thể viết lại là $y = 2^{-x}$. Hai hàm số có dạng $y=f(x)$ và $y=f(-x)$ luôn đối xứng nhau qua trục tung $Oy$." },
+                { id: "hsml_p2_3", question: "Cho các hàm số $y=a^x, y=b^x, y=c^x$ với $0 &lt; a &lt; 1$ và $c &gt; b &gt; 1$.", items: [
+                    { text: "Hàm số $y=a^x$ đồng biến trên $\\mathbb{R}$.", isTrue: false },
+                    { text: "Hàm số $y=b^x$ nghịch biến trên $\\mathbb{R}$.", isTrue: false },
+                    { text: "Với cùng một giá trị $x &gt; 0$, ta luôn có $c^x &gt; b^x$.", isTrue: true },
+                    { text: "Khi $x &lt; 0$, đồ thị hàm số $y=c^x$ luôn nằm bên dưới đồ thị hàm số $y=b^x$.", isTrue: true }
+                ], explanation: "<b>Giải thích chi tiết:</b><br>a) Sai. Do cơ số $0 &lt; a &lt; 1$, hàm số mũ $y=a^x$ luôn nghịch biến.<br>b) Sai. Do cơ số $b &gt; 1$, hàm số mũ $y=b^x$ luôn đồng biến.<br>c) Đúng. Vì $c &gt; b &gt; 1$, việc nâng lũy thừa với số mũ dương $x &gt; 0$ sẽ bảo toàn chiều bất đẳng thức, do đó $c^x &gt; b^x$.<br>d) Đúng. Khi $x &lt; 0$, ta có thể đặt $x = -k$ (với $k &gt; 0$). Từ $c &gt; b &gt; 1 \\Rightarrow \\frac{1}{c} &lt; \\frac{1}{b} &lt; 1 \\Rightarrow \\left(\\frac{1}{c}\\right)^k &lt; \\left(\\frac{1}{b}\\right)^k \\Rightarrow c^{-k} &lt; b^{-k} \\Rightarrow c^x &lt; b^x$. Vậy đồ thị $y=c^x$ nằm dưới $y=b^x$." },
+                { id: "hsml_p2_4", question: "Sự phát triển dân số được ước tính theo công thức $P(t) = P_0 e^{rt}$, trong đó $r$ là tỉ lệ tăng dân số, $P_0$ là dân số ban đầu.", items: [
+                    { text: "Tại thời điểm $t=0$, dân số tính được bằng đúng $P_0$.", isTrue: true },
+                    { text: "Hàm số dân số $P(t)$ là một hàm số nghịch biến theo thời gian $t$.", isTrue: false },
+                    { text: "Dân số không bao giờ giảm về 0 nếu dân số ban đầu $P_0 &gt; 0$.", isTrue: true },
+                    { text: "Cơ số của hàm số mũ trong công thức này là hằng số Euler $e$.", isTrue: true }
+                ], explanation: "<b>Giải thích chi tiết:</b><br>a) Đúng. Thay $t=0$ vào phương trình $\\Rightarrow P(0) = P_0 e^0 = P_0 \\cdot 1 = P_0$.<br>b) Sai. Tỉ lệ tăng dân số là $r &gt; 0$, nên cơ số biểu kiến $e^r &gt; 1$, hàm số là hàm đồng biến (dân số tăng dần theo thời gian).<br>c) Đúng. Vì hàm số mũ $e^{rt}$ luôn luôn nhận giá trị lớn hơn $0$ với mọi $t$, do đó tích $P_0 e^{rt} &gt; 0$.<br>d) Đúng. Công thức chuẩn của sự tăng trưởng liên tục sử dụng cơ số tự nhiên $e \\approx 2.718$." },
+                { id: "hsml_p2_5", question: "Cho hàm số $y = \\log(x^2 - 2x - m + 1)$. Để hàm số có tập xác định là toàn bộ $\\mathbb{R}$:", items: [
+                    { text: "Điều kiện là biểu thức $x^2 - 2x - m + 1 &gt; 0$ với mọi $x \\in \\mathbb{R}$.", isTrue: true },
+                    { text: "Biệt thức thu gọn của tam thức bậc hai là $\\Delta' = m$.", isTrue: true },
+                    { text: "Để thỏa mãn yêu cầu bài toán, cần có điều kiện $m &gt; 0$.", isTrue: false },
+                    { text: "Giá trị nguyên lớn nhất của tham số $m$ thỏa mãn yêu cầu là $m = -1$.", isTrue: true }
+                ], explanation: "<b>Giải thích chi tiết:</b><br>a) Đúng. Hàm lôgarit xác định khi và chỉ khi biểu thức dưới dấu lôgarit luôn mang giá trị dương.<br>b) Đúng. Xét tam thức bậc hai $g(x) = x^2 - 2x - m + 1$. Ta tính được $\\Delta' = (-1)^2 - 1(-m+1) = 1 + m - 1 = m$.<br>c) Sai. Để $g(x) &gt; 0 \\, \\forall x \\in \\mathbb{R}$, ta cần $\\Delta' &lt; 0 \\Leftrightarrow m &lt; 0$ (do hệ số $a = 1 &gt; 0$ đã thỏa mãn).<br>d) Đúng. Vì điều kiện chặt chẽ là $m &lt; 0$, giá trị nguyên lớn nhất thỏa mãn bất phương trình là $m = -1$." },
+                { id: "hsml_p2_6", question: "Một người gửi tiền vào ngân hàng theo thể thức lãi kép với công thức $A = P(1+r)^n$.", items: [
+                    { text: "Hàm số mô tả số tiền $A$ theo số kỳ hạn $n$ là một hàm số mũ.", isTrue: true },
+                    { text: "Cơ số của hàm số mũ này là $1+r$.", isTrue: true },
+                    { text: "Hàm số này luôn nghịch biến vì lãi suất $r &lt; 1$.", isTrue: false },
+                    { text: "Số tiền gốc $P$ đóng vai trò là hệ số nhân ban đầu (ứng với $n=0$).", isTrue: true }
+                ], explanation: "<b>Giải thích chi tiết:</b><br>a) Đúng. Biến số $n$ (đại diện cho thời gian/kỳ hạn) nằm ở vị trí số mũ, đây chính là mô hình cốt lõi của hàm số mũ.<br>b) Đúng. Trong hàm số có dạng $y = c \\cdot a^x$, cơ số ở đây chính là phần nằm dưới số mũ: $a = 1+r$.<br>c) Sai. Mặc dù lãi suất $r &lt; 1$, nhưng vì $r &gt; 0$ nên cơ số $1+r &gt; 1$. Vì vậy, hàm số luôn đồng biến (tổng số tiền sinh lời tăng dần theo thời gian).<br>d) Đúng. Tại thời điểm ban đầu khi $n=0$ (chưa trải qua kỳ hạn nào), ta có $A = P(1+r)^0 = P \\cdot 1 = P$." },
+                { id: "hsml_p2_7", question: "Xét đặc điểm của hai đồ thị hàm số $y = a^x$ và $y = \\log_a x$ (với điều kiện $a &gt; 1$).", items: [
+                    { text: "Hai đồ thị này luôn cắt nhau tại điểm $(1; 1)$.", isTrue: false },
+                    { text: "Đồ thị hàm số $y = a^x$ luôn nằm hoàn toàn phía trên trục hoành.", isTrue: true },
+                    { text: "Đồ thị hàm số $y = \\log_a x$ luôn nằm hoàn toàn phía bên phải trục tung.", isTrue: true },
+                    { text: "Hai đồ thị này đối xứng với nhau qua đường phân giác $y = x$.", isTrue: true }
+                ], explanation: "<b>Giải thích chi tiết:</b><br>a) Sai. Đồ thị $y=a^x$ đi qua điểm $(0; 1)$ và $(1; a)$. Đồ thị $y=\\log_a x$ đi qua $(1; 0)$ và $(a; 1)$. Thường thì chúng không cắt nhau tại $(1;1)$.<br>b) Đúng. Tập giá trị của hàm số mũ là $(0; +\\infty)$ nên giá trị $y$ luôn dương, đồ thị nằm hoàn toàn trên trục $Ox$.<br>c) Đúng. Tập xác định của hàm số lôgarit là khoảng $(0; +\\infty)$ nên giá trị $x$ luôn dương, đồ thị nằm hoàn toàn bên phải trục $Oy$.<br>d) Đúng. Hàm số mũ và hàm số lôgarit cùng cơ số là hai hàm số ngược của nhau, đồ thị của chúng luôn đối xứng qua đường $y = x$." },
+                { id: "hsml_p2_8", question: "Xét hàm số $y = \\log_2(x^2 + 1)$.", items: [
+                    { text: "Tập xác định của hàm số là $\\mathbb{R}$.", isTrue: true },
+                    { text: "Giá trị nhỏ nhất của hàm số bằng 0.", isTrue: true },
+                    { text: "Hàm số đồng biến trên toàn bộ $\\mathbb{R}$.", isTrue: false },
+                    { text: "Đồ thị hàm số nhận trục tung làm trục đối xứng.", isTrue: true }
+                ], explanation: "<b>Giải thích chi tiết:</b><br>a) Đúng. Biểu thức $x^2 + 1 \\ge 1 &gt; 0 \\, \\forall x \\in \\mathbb{R}$.<br>b) Đúng. Do $x^2+1 \\ge 1 \\Rightarrow \\log_2(x^2+1) \\ge \\log_2 1 = 0$. Giá trị nhỏ nhất bằng 0 đạt được tại $x=0$.<br>c) Sai. Hàm số là hàm hợp. Khi $x &lt; 0$, biểu thức đa thức $x^2+1$ nghịch biến nên hàm lôgarit tương ứng cũng nghịch biến. Hàm số không thể đồng biến trên toàn bộ $\\mathbb{R}$.<br>d) Đúng. Hàm số là hàm chẵn vì $f(-x) = \\log_2((-x)^2+1) = \\log_2(x^2+1) = f(x)$. Do đó đồ thị của nó đối xứng qua trục tung $Oy$." },
+                { id: "hsml_p2_9", question: "Xét hàm số $y = 3^{|x|}$.", items: [
+                    { text: "Tập xác định của hàm số là $\\mathbb{R}$.", isTrue: true },
+                    { text: "Đây là một hàm số chẵn.", isTrue: true },
+                    { text: "Giá trị nhỏ nhất của hàm số là 0.", isTrue: false },
+                    { text: "Hàm số nghịch biến trên khoảng $(-\\infty; 0)$.", isTrue: true }
+                ], explanation: "<b>Giải thích chi tiết:</b><br>a) Đúng. Biểu thức chứa dấu giá trị tuyệt đối $|x|$ hoàn toàn xác định với mọi số thực $x \\in \\mathbb{R}$.<br>b) Đúng. Ta có $f(-x) = 3^{|-x|} = 3^{|x|} = f(x)$ nên đây đúng là một hàm chẵn.<br>c) Sai. Vì $|x| \\ge 0 \\Rightarrow 3^{|x|} \\ge 3^0 = 1$. Giá trị nhỏ nhất của hàm số là 1, không bao giờ chạm tới 0.<br>d) Đúng. Khi xét trên khoảng $x &lt; 0 \\Rightarrow |x| = -x \\Rightarrow y = 3^{-x} = \\left(\\frac{1}{3}\\right)^x$. Cơ số $1/3 &lt; 1$ nên hàm số nghịch biến trên khoảng $(-\\infty; 0)$." },
+                { id: "hsml_p2_10", question: "Khối lượng một chất phóng xạ tuân theo định luật suy giảm $m(t) = m_0 \\cdot (0.5)^{\\frac{t}{T}}$, trong đó $T$ là chu kì bán rã.", items: [
+                    { text: "Hằng số $T$ biểu thị khoảng thời gian để lượng chất giảm đi một nửa.", isTrue: true },
+                    { text: "Hàm số khối lượng $m(t)$ là một hàm số nghịch biến theo thời gian.", isTrue: true },
+                    { text: "Cơ số của hàm số mũ trong công thức này là một số lớn hơn 1.", isTrue: false },
+                    { text: "Sau khoảng thời gian $t = 2T$, lượng chất phóng xạ còn lại đúng $25\\%$ so với ban đầu.", isTrue: true }
+                ], explanation: "<b>Giải thích chi tiết:</b><br>a) Đúng. Khi thay $t=T$, ta có $m(T) = m_0(0.5)^1 = 0.5 m_0$ (tức là lượng chất giảm đúng 1 nửa so với ban đầu). Đây là định nghĩa chuẩn của chu kì bán rã.<br>b) Đúng. Do hàm số mô tả sự \"suy giảm\" theo hàm mũ, giá trị $m(t)$ liên tục giảm dần theo thời gian tiến về phía trước.<br>c) Sai. Cơ số thực tế của hàm mũ là $0.5$, đây là một số nhỏ hơn 1. Chính vì cơ số nhỏ hơn 1 nên hàm số mới có tính chất nghịch biến (suy giảm).<br>d) Đúng. Tại thời điểm $t=2T$, khối lượng còn lại là $m(2T) = m_0(0.5)^2 = 0.25 m_0$. Tức là còn lại đúng $25\\%$ lượng chất ban đầu." }
+            ],
+            part3: [
+                { id: "hsml_p3_1", question: "Có bao nhiêu giá trị nguyên dương của $x$ thuộc tập xác định của hàm số $y = \\ln(2025 - x^2)$?", keywords: ["44"], explanation: "Điều kiện xác định của hàm số lôgarit: $2025 - x^2 &gt; 0 \\Leftrightarrow x^2 &lt; 2025 \\Leftrightarrow -45 &lt; x &lt; 45$. <br>Vì $x$ là các số nguyên dương nên $x \\in \\{1, 2, 3, \\dots, 44\\}$. <br>Vậy có tất cả $44$ giá trị thỏa mãn." },
+                { id: "hsml_p3_2", question: "Tập xác định của hàm số $y = (9-x^2)^{\\frac{1}{3}} + \\log_2(x-1)$ là khoảng $(a; b)$. Tính giá trị của biểu thức $2(a+b)$.", keywords: ["8"], explanation: "Hàm số lũy thừa với số mũ không nguyên $(1/3)$ đòi hỏi cơ số phải dương: $9 - x^2 &gt; 0 \\Leftrightarrow -3 &lt; x &lt; 3$. <br>Hàm lôgarit đòi hỏi biểu thức dương: $x - 1 &gt; 0 \\Leftrightarrow x &gt; 1$. <br>Giao hai tập điều kiện ta có: $1 &lt; x &lt; 3 \\Rightarrow D = (1; 3)$. <br>Vậy $a=1, b=3 \\Rightarrow 2(a+b) = 2(4) = 8$." },
+                { id: "hsml_p3_3", question: "Tìm số nguyên lớn nhất của tham số $m$ để hàm số $y = \\log(x^2 - 2x - m + 1)$ có tập xác định là toàn bộ $\\mathbb{R}$.", keywords: ["-1"], explanation: "Yêu cầu bài toán tương đương với bất phương trình: $x^2 - 2x - m + 1 &gt; 0 \\, \\forall x \\in \\mathbb{R}$. <br>Vì hệ số $a=1 &gt; 0$, ta chỉ cần điều kiện $\\Delta' &lt; 0 \\Leftrightarrow (-1)^2 - 1(-m+1) &lt; 0 \\Leftrightarrow 1 + m - 1 &lt; 0 \\Leftrightarrow m &lt; 0$. <br>Số nguyên lớn nhất thỏa mãn $m &lt; 0$ chính là $m = -1$." },
+                { id: "hsml_p3_4", question: "Dân số thế giới năm 2020 ước tính khoảng 7.79 tỉ người với tốc độ tăng trưởng là 1.05%/năm. Áp dụng mô hình $P(t) = 7.79 \\cdot (1.0105)^{t-2020}$, đến năm bao nhiêu thì dân số thế giới đạt mức 8.5 tỉ người? (Làm tròn lên số nguyên năm).", keywords: ["2029"], explanation: "Giải phương trình hàm số mũ theo mô hình: $7.79 \\cdot (1.0105)^{t-2020} = 8.5 \\Leftrightarrow (1.0105)^{t-2020} = \\frac{8.5}{7.79}$. <br>Lấy lôgarit hai vế ta được: $t - 2020 = \\log_{1.0105}\\left(\\frac{8.5}{7.79}\\right) \\approx 8.35$. <br>Vậy $t \\approx 2028.35$. Làm tròn lên, khoảng năm $2029$ dân số sẽ đạt mức này." },
+                { id: "hsml_p3_5", question: "Một người gửi tiết kiệm 100 triệu đồng với lãi suất 8%/năm theo kì hạn 6 tháng (tính lãi kép). Hỏi sau tối thiểu bao nhiêu tháng, người đó nhận được ít nhất 120 triệu đồng? (Lưu ý: nhập kết quả tính bằng tháng).", keywords: ["30"], explanation: "Lãi suất năm là 8% nên lãi suất tính theo mỗi kì hạn 6 tháng là $r = 4\\% = 0.04$. <br>Áp dụng công thức lãi kép, ta có: $100(1+0.04)^n = 120 \\Rightarrow 1.04^n = 1.2 \\Rightarrow n = \\log_{1.04}(1.2) \\approx 4.65$. <br>Vì số kỳ hạn $n$ phải là số nguyên (ngân hàng chốt lãi theo kỳ) nên cần $n=5$ kỳ. Mỗi kỳ kéo dài 6 tháng, vậy tổng thời gian tối thiểu là $5 \\times 6 = 30$ tháng." },
+                { id: "hsml_p3_6", question: "Một phòng thí nghiệm nuôi cấy vi khuẩn. Ban đầu có 300 vi khuẩn. Sự tăng trưởng tuân theo mô hình $f(t) = C \\cdot e^{kt}$ ($t$ tính bằng giờ). Sau 1 giờ, số vi khuẩn là 705 con. Dự đoán số lượng vi khuẩn sau 5 giờ là bao nhiêu? (Làm tròn đến số nguyên gần nhất).", keywords: ["21501"], explanation: "Tại $t=0$, ta có $f(0) = C \\cdot e^0 = C = 300$. <br>Tại $t=1$, ta có $f(1) = 300 \\cdot e^k = 705 \\Rightarrow e^k = \\frac{705}{300} = 2.35$. <br>Số vi khuẩn sau 5 giờ là $f(5) = 300 \\cdot e^{5k} = 300 \\cdot (e^k)^5 = 300 \\cdot (2.35)^5 \\approx 21501.1$. <br>Làm tròn thành $21501$ con vi khuẩn." },
+                { id: "hsml_p3_7", question: "Đồ thị hàm số $y = a^x$ (với $a &gt; 0$) đi qua điểm có tọa độ $(3; 8)$. Tìm cơ số $a$.", keywords: ["2"], explanation: "Thay tọa độ điểm $x=3, y=8$ vào phương trình hàm số ta được: $8 = a^3$. <br>Vì điều kiện $a &gt; 0$, ta trích xuất căn bậc ba: $a = \\sqrt[3]{8} = 2$." },
+                { id: "hsml_p3_8", question: "Đồ thị của hàm số $y = 3^x + 2$ cắt trục tung $Oy$ tại điểm có tung độ bằng bao nhiêu?", keywords: ["3"], explanation: "Giao điểm của một đồ thị với trục tung luôn có hoành độ $x=0$. <br>Thay $x=0$ vào phương trình hàm số: $y = 3^0 + 2 = 1 + 2 = 3$." },
+                { id: "hsml_p3_9", question: "Có bao nhiêu giá trị nguyên của $x$ thuộc tập xác định của hàm số $y = \\log_3(4 - x^2)$?", keywords: ["3"], explanation: "Điều kiện xác định của hàm lôgarit là: $4 - x^2 &gt; 0 \\Leftrightarrow x^2 &lt; 4 \\Leftrightarrow -2 &lt; x &lt; 2$. <br>Các giá trị nguyên của $x$ nằm trong khoảng này là $-1, 0, 1$. Vậy có tổng cộng $3$ giá trị." },
+                { id: "hsml_p3_10", question: "Đồ thị hàm số $y = \\log_5(x+4) - 1$ cắt trục hoành tại điểm có hoành độ bằng bao nhiêu?", keywords: ["1"], explanation: "Giao điểm của một đồ thị với trục hoành luôn có tung độ $y=0$. <br>Giải phương trình: $\\log_5(x+4) - 1 = 0 \\Leftrightarrow \\log_5(x+4) = 1 \\Leftrightarrow x+4 = 5^1 \\Leftrightarrow x = 1$." }
+            ]
+        };
+
+        let currentSession = [];
+        let currentIndex = 0;
+        let score = 0;
+        let selectedAnswers = null;
+
+        function shuffle(array) { return array.sort(() => Math.random() - 0.5); }
+
+        function initGame() {
+            // Thuật toán Anti-repetition: Đảm bảo trùng lặp không quá 2 câu
+            let playedHistory = JSON.parse(localStorage.getItem('played_history_hsml_v6') || '[]');
+            const lastRoundIds = JSON.parse(localStorage.getItem('last_round_hsml_v6') || '[]');
+            
+            let globalRecycledCount = 0;
+
+            const getFresh = (pool, count) => {
+                // Ưu tiên cao nhất: Lọc bỏ những câu đã từng làm VÀ câu vừa làm ở lượt trước
+                let available = pool.filter(q => !playedHistory.includes(q.id) && !lastRoundIds.includes(q.id));
+                let selected = [];
+                
+                if (available.length >= count) {
+                    selected = shuffle(available).slice(0, count);
+                } else {
+                    // Nếu cạn kho: Reset lại lịch sử tổng, nhưng VẪN PHẢI NÉ các câu của lượt liền trước
+                    const poolIds = pool.map(p => p.id);
+                    playedHistory = playedHistory.filter(id => !poolIds.includes(id));
+                    available = pool.filter(q => !lastRoundIds.includes(q.id));
+                    
+                    if (available.length >= count) {
+                        selected = shuffle(available).slice(0, count);
+                    } else {
+                        // Nới lỏng: Khi số câu còn lại ít hơn yêu cầu, lấy bù từ lượt trước nhưng KHÔNG QUÁ 2 CÂU
+                        selected = [...available];
+                        let needed = count - available.length;
+                        let maxAllowed = Math.max(0, 2 - globalRecycledCount);
+                        let take = Math.min(needed, maxAllowed);
+                        let recycled = shuffle(pool.filter(q => lastRoundIds.includes(q.id)));
+                        selected = selected.concat(recycled.slice(0, take));
+                        globalRecycledCount += take;
+                    }
+                }
+                
+                playedHistory.push(...selected.map(q => q.id));
+                return selected;
+            };
+
+            const p1 = getFresh(MASTER_POOL.part1, 7);
+            const p2 = getFresh(MASTER_POOL.part2, 5);
+            const p3 = getFresh(MASTER_POOL.part3, 3);
+
+            currentSession = [...p1, ...p2, ...p3];
+            
+            // Lưu lại ID của lượt này để dùng cho lượt sau
+            localStorage.setItem('played_history_hsml_v6', JSON.stringify(playedHistory));
+            localStorage.setItem('last_round_hsml_v6', JSON.stringify(currentSession.map(q => q.id)));
+
+            currentIndex = 0; 
+            score = 0;
+            document.getElementById('start-screen').classList.add('hidden');
+            document.getElementById('progress-container').classList.remove('hidden');
+            document.getElementById('footer-actions').classList.remove('hidden');
+            renderQuestion();
+        }
+
+        function renderQuestion() {
+            const container = document.getElementById('main-content');
+            const data = currentSession[currentIndex];
+            const qNum = currentIndex + 1;
+            selectedAnswers = (currentIndex < 7) ? null : (currentIndex < 12 ? {} : "");
+
+            document.getElementById('status').innerText = `CÂU ${qNum} / 15`;
+            document.getElementById('progress-bar').style.width = `${(qNum / 15) * 100}%`;
+            document.getElementById('check-btn').classList.remove('hidden');
+            document.getElementById('next-btn').classList.add('hidden');
+            document.getElementById('result-btn').classList.add('hidden');
+
+            let html = `<div class="fade-in">
+                <div class="mb-10 flex items-center gap-4">
+                    <span class="bg-indigo-600 text-white text-xs font-black px-5 py-2.5 rounded-2xl uppercase tracking-widest shadow-lg shadow-indigo-100">PHẦN ${qNum <= 7 ? 'I: TRẮC NGHIỆM' : (qNum <= 12 ? 'II: ĐÚNG/SAI' : 'III: TRẢ LỜI NGẮN')}</span>
+                </div>
+                <div class="text-xl md:text-2xl font-bold text-slate-800 mb-12 leading-relaxed math-render" id="q-text">${data.question}</div>`;
+
+            if (currentIndex < 7) { 
+                html += `<div class="grid gap-6">`;
+                data.options.forEach((opt, i) => {
+                    html += `<button onclick="pickMCQ(${i})" id="mcq-${i}" class="choice-btn group p-7 border-2 border-slate-100 rounded-[2rem] text-left hover:border-indigo-400 hover:bg-indigo-50 transition-all flex items-center gap-8">
+                        <div class="w-14 h-14 rounded-3xl bg-slate-50 flex items-center justify-center font-black text-slate-400 group-hover:text-indigo-600 transition-colors text-2xl">${String.fromCharCode(65+i)}</div>
+                        <div class="text-xl font-semibold text-slate-700 math-render">${opt}</div>
+                    </button>`;
+                });
+                html += `</div>`;
+            } else if (currentIndex < 12) { 
+                html += `<div class="space-y-6">`;
+                data.items.forEach((item, i) => {
+                    html += `<div class="item-row flex flex-col md:flex-row md:items-center justify-between p-7 bg-slate-50 rounded-[2.5rem] border border-slate-100 gap-6 shadow-sm">
+                        <div class="flex items-start gap-4">
+                            <span class="font-black text-indigo-500 mt-1 text-lg">${['a)', 'b)', 'c)', 'd)'][i]}</span>
+                            <span class="text-xl text-slate-700 font-bold leading-relaxed math-render">${item.text}</span>
+                        </div>
+                        <div class="flex gap-4 min-w-[260px]">
+                            <button onclick="pickTF(${i}, true)" id="tf-${i}-t" class="flex-1 py-5 rounded-[1.5rem] border-2 border-white bg-white font-black text-lg transition active:scale-90 shadow-sm text-slate-400 hover:text-indigo-600">ĐÚNG</button>
+                            <button onclick="pickTF(${i}, false)" id="tf-${i}-f" class="flex-1 py-5 rounded-[1.5rem] border-2 border-white bg-white font-black text-lg transition active:scale-90 shadow-sm text-slate-400 hover:text-indigo-600">SAI</button>
+                        </div>
+                    </div>`;
+                });
+                html += `</div>`;
+            } else { 
+                html += `<div class="relative max-w-lg mx-auto mt-12">
+                    <input type="text" id="short-ans" class="w-full p-10 border-4 border-slate-100 rounded-[3rem] text-5xl font-black text-center text-indigo-600 focus:border-indigo-400 outline-none transition shadow-inner" placeholder="Nhập đáp án...">
+                </div>`;
+            }
+
+            html += `<div id="exp-box" class="hidden mt-12 p-10 rounded-[3rem] explanation-box"></div></div>`;
+            container.innerHTML = html;
+            
+            if (window.MathJax) {
+                MathJax.typesetPromise().then(() => {
+                    document.querySelectorAll('.math-render').forEach(el => el.classList.add('ready'));
+                });
+            }
+        }
+
+        function pickMCQ(idx) {
+            selectedAnswers = idx;
+            document.querySelectorAll('[id^="mcq-"]').forEach(b => {
+                b.classList.replace('border-indigo-500', 'border-slate-100');
+                b.classList.remove('bg-indigo-50');
+            });
+            document.getElementById(`mcq-${idx}`).classList.replace('border-slate-100', 'border-indigo-500');
+            document.getElementById(`mcq-${idx}`).classList.add('bg-indigo-50');
+        }
+
+        function pickTF(idx, val) {
+            if (typeof selectedAnswers !== 'object') selectedAnswers = {};
+            selectedAnswers[idx] = val;
+            const btnT = document.getElementById(`tf-${idx}-t`), btnF = document.getElementById(`tf-${idx}-f`);
+            btnT.className = `flex-1 py-5 rounded-[1.5rem] border-2 font-black text-lg transition active:scale-90 ${val === true ? 'bg-indigo-600 text-white border-indigo-600 shadow-md' : 'bg-white border-white text-slate-400'}`;
+            btnF.className = `flex-1 py-5 rounded-[1.5rem] border-2 font-black text-lg transition active:scale-90 ${val === false ? 'bg-indigo-600 text-white border-indigo-600 shadow-md' : 'bg-white border-white text-slate-400'}`;
+        }
+
+        function processAnswer() {
+            const data = currentSession[currentIndex];
+            let isCorrect = false;
+
+            if (currentIndex < 7) {
+                if (selectedAnswers === null) return alert("Vui lòng chọn đáp án!");
+                isCorrect = (selectedAnswers === data.correct);
+                if (isCorrect) score += 1;
+                document.getElementById(`mcq-${data.correct}`).classList.add('bg-green-50', 'border-green-500');
+                if(!isCorrect) document.getElementById(`mcq-${selectedAnswers}`).classList.add('bg-red-50', 'border-red-500');
+            } else if (currentIndex < 12) {
+                let correctCount = 0;
+                let isFullAnswered = true;
+                for(let i=0; i<4; i++) { if(selectedAnswers[i] === undefined) isFullAnswered = false; }
+                if(!isFullAnswered) return alert("Vui lòng chọn Đúng/Sai cho tất cả các ý!");
+
+                data.items.forEach((item, i) => { if (selectedAnswers[i] === item.isTrue) correctCount++; });
+                const points = [0, 0.1, 0.25, 0.5, 1];
+                score += points[correctCount];
+                isCorrect = (correctCount === 4);
+            } else {
+                const input = document.getElementById('short-ans').value.trim().toLowerCase().replace(',', '.');
+                if(!input) return alert("Vui lòng nhập đáp án!");
+                isCorrect = data.keywords.some(k => input.includes(k.toLowerCase()));
+                if (isCorrect) score += 1;
+            }
+
+            const exp = document.getElementById('exp-box');
+            exp.innerHTML = `<h4 class="text-indigo-800 font-extrabold text-2xl mb-6 uppercase tracking-tighter">${isCorrect ? '✨ CHÍNH XÁC!' : '❌ HÃY KIỂM TRA LẠI LỜI GIẢI'}</h4>
+                             <div class="text-slate-700 font-medium leading-loose math-render text-lg" id="exp-text">${data.explanation}</div>`;
+            exp.classList.remove('hidden');
+            document.getElementById('check-btn').classList.add('hidden');
+
+            if (currentIndex === 14) document.getElementById('result-btn').classList.remove('hidden');
+            else document.getElementById('next-btn').classList.remove('hidden');
+            
+            if (window.MathJax) {
+                MathJax.typesetPromise().then(() => {
+                    const el = document.getElementById('exp-text');
+                    if(el) el.classList.add('ready');
+                });
+            }
+        }
+
+        function renderNext() { currentIndex++; renderQuestion(); }
+
+        function finishGame() {
+            const container = document.getElementById('main-content');
+            document.getElementById('footer-actions').classList.add('hidden');
+            document.getElementById('progress-container').classList.add('hidden');
+            
+            const finalScore = ((score / 15) * 10).toFixed(2);
+            let rank = finalScore >= 8.5 ? "XUẤT SẮC" : (finalScore >= 6.5 ? "KHÁ GIỎI" : "CẦN CỐ GẮNG");
+            
+            container.innerHTML = `<div class="text-center py-20 fade-in">
+                <div class="text-[12rem] mb-12 animate-pulse drop-shadow-2xl">🏆</div>
+                <h2 class="text-6xl font-black text-slate-800 mb-6 uppercase tracking-tighter">${rank}</h2>
+                <div class="text-[10rem] leading-none font-black text-indigo-600 my-16 tracking-tighter italic">${finalScore}<span class="text-4xl text-slate-300 ml-6 not-italic">/ 10</span></div>
+                <button onclick="location.reload()" class="bg-indigo-600 text-white px-24 py-8 rounded-[3rem] font-black text-3xl shadow-xl hover:bg-indigo-700 transition active:scale-95 uppercase tracking-wide">LÀM ĐỀ MỚI</button>
+            </div>`;
+        }
+    </script>
+</body>
+</html>
